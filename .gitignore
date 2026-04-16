@@ -1,0 +1,54 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+dist/
+*.egg-info/
+
+# Virtual environments
+.venv/
+venv/
+ENV/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# uv lock files (can cause conflicts across machines)
+# uv.lock
+
+# Databases (runtime data)
+*.db
+*.sqlite
+*.sqlite3
+
+# Runtime data directories
+mcp-server/data/
+data/chroma/
+agents/data/chroma/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Internal process records (root-level only; docs/ version is tracked)
+/ENGINEERING_LOG.md
+
+# Demo output
+demo/output/
