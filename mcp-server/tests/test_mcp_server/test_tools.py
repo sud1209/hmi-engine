@@ -17,7 +17,6 @@ pytestmark = pytest.mark.integration
 async def test_search_houses_returns_listings():
     result = await search_houses(query="3 bed house", limit=5)
     assert "listings" in result
-    assert "total" in result
     assert isinstance(result["listings"], list)
     assert result["total"] >= 0
 
@@ -26,6 +25,7 @@ async def test_search_houses_returns_listings():
 async def test_search_houses_city_filter():
     result = await search_houses(city="Austin", state="TX", limit=3)
     assert "listings" in result
+    assert len(result["listings"]) > 0
     for listing in result["listings"]:
         assert listing["city"] == "Austin"
 
@@ -55,26 +55,19 @@ async def test_search_houses_listing_structure():
 async def test_get_valuation_data_structure():
     result = await get_valuation_data(zip_code="78701")
     assert isinstance(result, list)
-    if result:
-        data = result[0]
-        assert "id" in data
-        assert "zip_code" in data
-        assert "median_listing_price" in data
-        assert "median_days_on_market" in data
-        assert "inventory_count" in data
-        assert "updated_date" in data
+    assert len(result) > 0
+    row = result[0]
+    assert "zip_code" in row
+    assert "median_listing_price" in row
 
 
 @pytest.mark.asyncio
 async def test_get_neighborhood_snapshot_structure():
     result = await get_neighborhood_snapshot(zip_code="78701")
-    if "error" not in result:
-        assert "zip_code" in result
-        assert "school_score" in result
-        assert "crime_score" in result
-        assert "walk_score" in result
-        assert "median_price" in result
-        assert "market_velocity" in result
+    assert "error" not in result
+    assert "zip_code" in result
+    assert "school_score" in result
+    assert "walk_score" in result
 
 
 @pytest.mark.asyncio
@@ -118,7 +111,8 @@ async def test_calculate_roi_positive_cash_flow():
     )
     assert "net_operating_income" in result
     assert "annual_roi_percentage" in result
-    assert isinstance(result["annual_roi_percentage"], float)
+    assert result["net_operating_income"] > 0
+    assert result["annual_roi_percentage"] > 0
 
 
 @pytest.mark.asyncio

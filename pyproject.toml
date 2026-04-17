@@ -1,0 +1,10 @@
+[project]
+name = "hmi-engine"
+version = "0.1.0"
+description = "Housing Market Intelligence Engine: SoTA Multi-Agent Research System"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = []
+
+[tool.uv]
+workspace = { members = ["mcp-server", "agents"] }
