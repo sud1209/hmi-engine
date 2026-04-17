@@ -13,15 +13,14 @@ from mcp_server.tools.housing_market import (
 pytestmark = pytest.mark.integration
 
 
-@pytest.mark.asyncio
 async def test_search_houses_returns_listings():
-    result = await search_houses(query="3 bed house", limit=5)
+    result = await search_houses(query="Main", limit=5)
     assert "listings" in result
     assert isinstance(result["listings"], list)
-    assert result["total"] >= 0
+    assert len(result["listings"]) > 0
+    assert result["total"] > 0
 
 
-@pytest.mark.asyncio
 async def test_search_houses_city_filter():
     result = await search_houses(city="Austin", state="TX", limit=3)
     assert "listings" in result
@@ -30,7 +29,6 @@ async def test_search_houses_city_filter():
         assert listing["city"] == "Austin"
 
 
-@pytest.mark.asyncio
 async def test_search_houses_listing_structure():
     result = await search_houses(limit=1)
     assert "listings" in result
@@ -51,7 +49,6 @@ async def test_search_houses_listing_structure():
     assert "source" in listing
 
 
-@pytest.mark.asyncio
 async def test_get_valuation_data_structure():
     result = await get_valuation_data(zip_code="78701")
     assert isinstance(result, list)
@@ -61,7 +58,6 @@ async def test_get_valuation_data_structure():
     assert "median_listing_price" in row
 
 
-@pytest.mark.asyncio
 async def test_get_neighborhood_snapshot_structure():
     result = await get_neighborhood_snapshot(zip_code="78701")
     assert "error" not in result
@@ -70,7 +66,6 @@ async def test_get_neighborhood_snapshot_structure():
     assert "walk_score" in result
 
 
-@pytest.mark.asyncio
 async def test_get_mortgage_rates_returns_rates():
     result = await get_mortgage_rates()
     assert isinstance(result, list)
@@ -83,7 +78,6 @@ async def test_get_mortgage_rates_returns_rates():
     assert isinstance(rate["rate"], (int, float))
 
 
-@pytest.mark.asyncio
 async def test_get_housing_market_snapshot_national():
     result = await get_housing_market_snapshot()
     assert "total_listings" in result
@@ -92,15 +86,15 @@ async def test_get_housing_market_snapshot_national():
     assert "as_of_date" in result
 
 
-@pytest.mark.asyncio
 async def test_get_housing_market_snapshot_city_filter():
-    result = await get_housing_market_snapshot(city_filter="Austin")
-    assert "total_listings" in result
-    assert "average_median_price" in result
-    assert "latest_mortgage_rate" in result
+    national = await get_housing_market_snapshot()
+    city = await get_housing_market_snapshot(city_filter="Austin")
+    assert "total_listings" in city
+    assert "average_median_price" in city
+    assert "latest_mortgage_rate" in city
+    assert city["total_listings"] <= national["total_listings"]
 
 
-@pytest.mark.asyncio
 async def test_calculate_roi_positive_cash_flow():
     result = await calculate_roi(
         purchase_price=400_000,
@@ -115,7 +109,6 @@ async def test_calculate_roi_positive_cash_flow():
     assert result["annual_roi_percentage"] > 0
 
 
-@pytest.mark.asyncio
 async def test_calculate_roi_negative_cash_flow():
     result = await calculate_roi(
         purchase_price=1_200_000,
