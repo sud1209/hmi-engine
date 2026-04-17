@@ -32,7 +32,7 @@ export const api = {
     request<Record<string, HistorySnapshot[]>>('/api/history/all'),
 
   getRankings: (metric: string, sort: 'asc' | 'desc' = 'desc') =>
-    request<RankingRow[]>(`/api/msa/rankings?metric=${metric}&sort=${sort}`),
+    request<RankingRow[]>(`/api/msa/rankings?metric=${encodeURIComponent(metric)}&sort=${sort}`),
 
   nlQuery: (query: string) =>
     request<NLQueryResponse>('/api/query', {

@@ -10,7 +10,7 @@ export function isYoYMetric(metric: string): boolean {
   return YOY_METRICS.has(metric)
 }
 
-export function formatMetricValue(metric: string, value: number): string {
+export function formatMetricValue(metric: string, value: number | null | undefined): string {
   if (value === null || value === undefined) return '—'
 
   if (isYoYMetric(metric)) {

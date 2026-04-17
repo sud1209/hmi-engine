@@ -61,7 +61,7 @@ export interface ResearchRun {
   plan?: string[]
   result?: {
     report: { report_markdown: string }
-    dashboard: { kpis: Record<string, unknown> }
+    dashboard: { kpis: Record<string, string> }
     messages: unknown[]
   }
   error?: string

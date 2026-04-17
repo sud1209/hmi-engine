@@ -40,8 +40,8 @@ describe('formatMetricValue', () => {
   })
 
   it('returns "—" for null/undefined', () => {
-    expect(formatMetricValue('active_listings', null as unknown as number)).toBe('—')
-    expect(formatMetricValue('median_dom', undefined as unknown as number)).toBe('—')
+    expect(formatMetricValue('active_listings', null)).toBe('—')
+    expect(formatMetricValue('median_dom', undefined)).toBe('—')
   })
 })
 
