@@ -6,6 +6,7 @@
   --color-border: var(--border);
   --color-accent: var(--accent);
   --color-muted: var(--muted);
+  --color-text: var(--text);
 }
 
 /* Light (default :root for SSR) */
@@ -31,7 +32,6 @@
 html {
   background-color: var(--bg);
   color: var(--text);
-  font-family: Inter, system-ui, -apple-system, sans-serif;
 }
 
 * {
