@@ -1,0 +1,11 @@
+[
+  {
+    "query": "test",
+    "duration_sec": 0.0,
+    "success": true,
+    "num_steps": 1,
+    "num_messages": 0,
+    "has_report": true,
+    "has_dashboard": true
+  }
+]

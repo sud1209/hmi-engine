@@ -2,7 +2,6 @@ import pytest
 from unittest.mock import AsyncMock, patch, MagicMock
 
 
-@pytest.mark.asyncio
 async def test_harness_smoke_succeeds_when_graph_returns_results():
     """Smoke run completes with success=True when graph returns report+dashboard."""
     from agents.eval.eval_harness import ResearchEvalHarness
@@ -30,7 +29,6 @@ async def test_harness_smoke_succeeds_when_graph_returns_results():
     assert harness.results[0]["has_dashboard"] is True
 
 
-@pytest.mark.asyncio
 async def test_harness_smoke_calls_graph_twice_for_hitl():
     """Smoke run must call graph.ainvoke twice: once for plan, once with approval."""
     from agents.eval.eval_harness import ResearchEvalHarness
@@ -48,9 +46,17 @@ async def test_harness_smoke_calls_graph_twice_for_hitl():
     second_call_args = mock_graph.ainvoke.call_args_list[1]
     state_arg = second_call_args[0][0]
     assert state_arg.get("is_approved") is True
+    # Second call must also pass config with thread_id
+    second_call_kwargs = mock_graph.ainvoke.call_args_list[1]
+    # config is the second positional arg or a kwarg
+    if len(second_call_kwargs[0]) > 1:
+        config_arg = second_call_kwargs[0][1]
+    else:
+        config_arg = second_call_kwargs[1].get("config", {})
+    assert "configurable" in config_arg
+    assert "thread_id" in config_arg["configurable"]
 
 
-@pytest.mark.asyncio
 async def test_harness_smoke_only_one_case():
     """Smoke=True must only run the first test case."""
     from agents.eval.eval_harness import ResearchEvalHarness
@@ -69,7 +75,6 @@ async def test_harness_smoke_only_one_case():
     assert len(harness.results) == 1  # Only first case
 
 
-@pytest.mark.asyncio
 async def test_harness_records_failure_on_exception():
     """If graph raises, the result entry has success=False."""
     from agents.eval.eval_harness import ResearchEvalHarness
@@ -84,7 +89,6 @@ async def test_harness_records_failure_on_exception():
     assert "LLM timeout" in harness.results[0]["error"]
 
 
-@pytest.mark.asyncio
 async def test_harness_initial_state_has_all_required_keys():
     """Initial state passed to graph must include past_context_summary."""
     from agents.eval.eval_harness import ResearchEvalHarness
