@@ -271,12 +271,56 @@ End-to-end smoke test after all changes: `POST /agent/research {"query": "housin
 
 ---
 
+## Phase 11 — Dashboard: Streamlit → Next.js 15
+
+**Date:** 2026-04-17  
+**Files changed:** `dashboard/` (complete replacement), `docker-compose.yml`
+
+### What was done
+
+Replaced the Streamlit prototype dashboard with a production-grade Next.js 15 single-page application. The docker-compose slot is unchanged (port 3000, same `dashboard` service), but the implementation is entirely new.
+
+**Stack:** Next.js 15 App Router, React 19, TypeScript 5, Tailwind CSS v4 (`@tailwindcss/postcss`, CSS `@theme` directive — no `tailwind.config.ts`), shadcn/ui primitives (12 components), Recharts 2, @tanstack/react-query 5, Zustand 5, next-themes, react-markdown, lucide-react.
+
+**Architecture decisions:**
+- All API calls go through Next.js route handlers that proxy to `mcp-server:8001` and `agent-runner:8000` over the Docker internal network. The browser never calls those services directly.
+- Root layout is a server component; `QueryClient` is created in a dedicated `QueryProvider` client component to avoid the `'use client'` on the root.
+- `next/font/google` (self-hosted Inter) rather than `<link>` tags — avoids render-blocking external font request.
+- `--border` CSS variable conflict with shadcn resolved by naming ours `--border-color`.
+
+**Features shipped:**
+- Dark/light theme toggle (default dark), dark bg `#0f0f13`, accent `#3479f5`
+- Navbar with global market selector (11 MSAs) wired to Zustand store
+- **Overview tab:** NL search bar (hero position) → 8 KPI tiles with 60s refetch → News + Rates row → HITL Research panel (collapsible)
+- **HITL Research panel:** 5-state machine (idle → awaiting_approval → running → complete → error), `useResearchStatus` polls at 3s, auto-stops at terminal statuses
+- **Trends tab:** Recharts LineChart, grey mass for all MSAs, National line, selected market accent line on top
+- **Rankings tab:** Recharts BarChart (layout=vertical), Cell per bar (accent for selected, dark for others), asc/desc toggle
+- **Yearly Comparison tab:** Recharts LineChart, seasonality view (Jan–Dec X-axis), per-market palette, per-year opacity (1.0/0.75/0.5/0.25), up to 5 markets
+
+**Quality fixes made during review:**
+- `formatMetricValue` signature changed from `value: number` to `value: number | null | undefined` (matched actual null data from API)
+- URL-encoded all dynamic route params (`metric`, `sort`, `runId`, `market`) in API proxy routes
+- `ts-jest` removed (redundant with `next/jest` SWC transform)
+- `--color-text` added to `@theme` CSS block (was missing, required inline styles as workaround)
+- `ResearchRun.result.dashboard.kpis` type aligned to `Record<string, string>` (was `Record<string, unknown>`)
+- `jest.config.ts` gained `moduleNameMapper` for `@/` path aliases + TanStack Query CJS override for Jest compatibility
+
+**Dockerfile:** Multi-stage (`deps` → `builder` → `runner`), non-root `nextjs` user, `output: standalone`, port 3000.
+
+**docker-compose change:** Health check updated from Python urllib (Streamlit) to `wget` (Node Alpine), URL `localhost:3000/api/health`, `start_period` 60s.
+
+### Test results
+
+16 tests across 3 suites all green: `utils.test.ts` (formatMetricValue, isYoYMetric, cn), `api.test.ts` (ApiError, getDashboard, nlQuery), `useResearchStatus.test.tsx` (disabled/enabled/terminal states).
+
+---
+
 ## Known Limitations
 
 | Item | Detail |
 |---|---|
 | `_runs` + `MemorySaver` are both in-memory | Graph checkpoints and run registry are lost on agent-runner restart. Fixing one without the other is half a solution — swap both to `AsyncPostgresSaver` + DB-backed run table for true persistence. |
-| No OAuth in this build | `st.login()` Streamlit OAuth is a placeholder; `dashboard.py` does not currently enforce login. Auth is enforced at the API layer (JWT/API key). |
+| No auth on dashboard | Dashboard has no OAuth gate in this build. Auth is enforced at the API layer (JWT/API key) but the Next.js app itself is public. |
 | Playwright in Docker on Windows | Chromium runs correctly inside the Linux container; host-side `docker-compose up` on Windows 11 requires WSL2 backend. Native Windows Playwright without WSL2 may need additional flags. |
 | NewsAPI free tier | Free tier limits to 100 requests/day and articles from the last 30 days. Production use requires a paid plan. |
 
@@ -294,8 +338,8 @@ End-to-end smoke test after all changes: `POST /agent/research {"query": "housin
 | Migrations | Alembic |
 | Browser automation | Playwright (headless Chromium) |
 | Vector DB | ChromaDB (persistent volume) |
-| Dashboard | Streamlit 1.42+ |
-| Visualization | Plotly 6 |
+| Dashboard | Next.js 15 + React 19 + Tailwind CSS v4 + shadcn/ui |
+| Visualization | Recharts 2 |
 | Reverse proxy | Caddy 2 |
 | Observability | structlog (JSON), Prometheus, Sentry |
 | Rate limiting | slowapi |
