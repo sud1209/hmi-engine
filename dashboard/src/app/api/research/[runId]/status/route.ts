@@ -8,7 +8,7 @@ export async function GET(
 ) {
   const { runId } = await params
   try {
-    const res = await fetch(`${AGENT}/research/${runId}/status`)
+    const res = await fetch(`${AGENT}/research/${encodeURIComponent(runId)}/status`)
     const data = await res.json()
     return NextResponse.json(data, { status: res.status })
   } catch {

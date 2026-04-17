@@ -9,7 +9,7 @@ export async function POST(
   const { runId } = await params
   try {
     const body = await req.json()
-    const res = await fetch(`${AGENT}/research/${runId}/approve`, {
+    const res = await fetch(`${AGENT}/research/${encodeURIComponent(runId)}/approve`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(body),

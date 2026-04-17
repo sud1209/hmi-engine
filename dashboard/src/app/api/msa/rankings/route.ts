@@ -6,7 +6,7 @@ export async function GET(req: NextRequest) {
   const metric = req.nextUrl.searchParams.get('metric') ?? 'median_sale_price'
   const sort = req.nextUrl.searchParams.get('sort') ?? 'desc'
   try {
-    const res = await fetch(`${MCP}/msa/rankings?metric=${encodeURIComponent(metric)}&sort=${sort}`)
+    const res = await fetch(`${MCP}/msa/rankings?metric=${encodeURIComponent(metric)}&sort=${encodeURIComponent(sort)}`)
     const data = await res.json()
     return NextResponse.json(data, { status: res.status })
   } catch {
