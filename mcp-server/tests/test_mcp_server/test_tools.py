@@ -34,21 +34,21 @@ async def test_search_houses_city_filter():
 async def test_search_houses_listing_structure():
     result = await search_houses(limit=1)
     assert "listings" in result
-    if result["listings"]:
-        listing = result["listings"][0]
-        assert "id" in listing
-        assert "address" in listing
-        assert "city" in listing
-        assert "state" in listing
-        assert "zip_code" in listing
-        assert "price" in listing
-        assert "beds" in listing
-        assert "baths" in listing
-        assert "sqft" in listing
-        assert "property_type" in listing
-        assert "year_built" in listing
-        assert "posted_date" in listing
-        assert "source" in listing
+    assert len(result["listings"]) > 0
+    listing = result["listings"][0]
+    assert "id" in listing
+    assert "address" in listing
+    assert "city" in listing
+    assert "state" in listing
+    assert "zip_code" in listing
+    assert "price" in listing
+    assert "beds" in listing
+    assert "baths" in listing
+    assert "sqft" in listing
+    assert "property_type" in listing
+    assert "year_built" in listing
+    assert "posted_date" in listing
+    assert "source" in listing
 
 
 @pytest.mark.asyncio
@@ -74,13 +74,13 @@ async def test_get_neighborhood_snapshot_structure():
 async def test_get_mortgage_rates_returns_rates():
     result = await get_mortgage_rates()
     assert isinstance(result, list)
-    if result:
-        rate = result[0]
-        assert "term_years" in rate
-        assert "rate" in rate
-        assert "type" in rate
-        assert "updated_date" in rate
-        assert isinstance(rate["rate"], (int, float))
+    assert len(result) > 0
+    rate = result[0]
+    assert "term_years" in rate
+    assert "rate" in rate
+    assert "type" in rate
+    assert "updated_date" in rate
+    assert isinstance(rate["rate"], (int, float))
 
 
 @pytest.mark.asyncio
