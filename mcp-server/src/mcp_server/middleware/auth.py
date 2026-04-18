@@ -10,6 +10,10 @@ Public endpoints (no auth required):
   GET  /dashboard
   GET  /sse
   GET  /tools/list
+  GET  /history
+  GET  /msa
+  POST /query
+  GET  /metrics
 
 Protected endpoints:
   POST /tools/call/*   — Bearer JWT
@@ -53,7 +57,11 @@ _PUBLIC_PREFIXES = (
 
 
 def _is_public(path: str) -> bool:
-    return any(path.startswith(p) for p in _PUBLIC_PREFIXES)
+    """Return True if the path requires no authentication."""
+    for p in _PUBLIC_PREFIXES:
+        if path == p or path.startswith(p + "/") or path.startswith(p + "?"):
+            return True
+    return False
 
 
 def _verify_jwt(token: str) -> dict:
