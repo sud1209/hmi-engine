@@ -64,3 +64,6 @@ benchmark_results.json
 
 # Interview prep (local only)
 docs/INTERVIEW-QA.md
+
+# Internal planning docs (local only)
+PLAN.md
