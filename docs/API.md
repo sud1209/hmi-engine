@@ -73,9 +73,32 @@ Dashboard KPIs, news, and mortgage rate data for a market.
 
 ---
 
+### `GET /api/history/all`
+
+Monthly time-series for **all markets** in one request, keyed by market name. Used by the Trends tab to render the full MSA distribution (grey mass).
+
+**Query params:**
+| Param | Type | Default | Description |
+|---|---|---|---|
+| `years` | int | `5` | Number of years of history |
+
+**Rate limit:** 10/min
+
+**Response 200:** Object keyed by market name, each value is an array sorted by `month` ascending. Same snapshot shape as `GET /history/{market}`.
+
+```json
+{
+  "National": [...],
+  "Austin": [...],
+  "Denver": [...]
+}
+```
+
+---
+
 ### `GET /api/history/{market}`
 
-Monthly time-series for a market (used by Trends and Historical visualization tabs).
+Monthly time-series for a single market (used by Trends and Yearly Comparison tabs).
 
 **Path params:**
 | Param | Type | Description |
@@ -102,7 +125,7 @@ Monthly time-series for a market (used by Trends and Historical visualization ta
     "sales_volume": 890,
     "new_listings": 950,
     "yoy_active_listings": 12.4,
-    "yoy_sale_price": 28.6,
+    "yoy_median_sale_price": 28.6,
     "yoy_sales_volume": -3.1,
     "yoy_new_listings": 8.9
   }

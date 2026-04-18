@@ -1,0 +1,20 @@
+http://{$DOMAIN:localhost} {
+    # MCP Server API — strip /api prefix
+    handle_path /api/* {
+        reverse_proxy mcp-server:8001
+    }
+
+    # Agent Runner API — strip /agent prefix
+    handle_path /agent/* {
+        reverse_proxy agent-runner:8000
+    }
+
+    # Dashboard (Next.js) — catch-all
+    reverse_proxy /* dashboard:3000
+
+    encode gzip
+    log {
+        output stdout
+        format json
+    }
+}

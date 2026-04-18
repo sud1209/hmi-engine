@@ -13,7 +13,7 @@ HMI Engine is a five-service Docker Compose application. Each service has a sing
    [Caddy :80/:443]
     ├── /api/*      → mcp-server:8001   (prefix stripped)
     ├── /agent/*    → agent-runner:8000  (prefix stripped)
-    └── /*          → dashboard:8501
+    └── /*          → dashboard:3000
          │
     ┌────┴─────────────────────────┐
     │                              │
@@ -21,9 +21,9 @@ HMI Engine is a five-service Docker Compose application. Each service has a sing
     │                              │
     └──── postgres:5432 ───────────┘
     │
-[dashboard:8501]
+[dashboard:3000]
          │
-    (reads mcp-server + agent-runner via internal hostnames)
+    (proxies /api/* and /agent/* via Next.js route handlers)
 ```
 
 ---
@@ -36,10 +36,10 @@ FastAPI application. Three roles:
 
 1. **MCP tool server** — exposes six housing market tools callable by agents via the `mcp` Python SDK's `sse_client` transport. Tools query PostgreSQL.
 
-2. **REST API for the dashboard** — `/dashboard`, `/history/{market}`, `/msa/rankings`, `/query` endpoints serve the Streamlit UI.
+2. **REST API for the dashboard** — `/dashboard`, `/history/all`, `/history/{market}`, `/msa/rankings`, `/query` endpoints serve the Next.js UI.
 
 3. **Live data feed scheduler** — APScheduler runs three background jobs in the FastAPI lifespan:
-   - `news_fetcher`: NewsAPI + RSS at 08:00 and 17:00 daily → `NewsItem` table
+   - `news_fetcher`: NewsAPI + RSS (NAR, Redfin Research, HUD) at startup, then 08:00 and 17:00 daily → `NewsItem` table
    - `rate_fetcher`: Freddie Mac PMMS at 09:00 daily → `MortgageRate` table
    - `kpi_ingestor`: file-watch every 15 min + HTTP push endpoint → `KPISnapshot` table
 
@@ -53,13 +53,16 @@ FastAPI application with a LangGraph multi-agent pipeline. Three roles:
 
 3. **LangGraph host** — holds the compiled `StateGraph` and `MemorySaver` checkpointer in process memory.
 
-### dashboard (port 8501)
+### dashboard (port 3000)
 
-Streamlit application. Four tabs:
-- **Overview** — KPI tiles, news panel, mortgage rate table, NL search bar, HITL research panel
-- **Trends** — Plotly line chart: all MSAs as grey mass, selected market highlighted
-- **MSA Rankings** — Horizontal bar chart, all markets, sorted by metric value
-- **Historical** — Multi-select comparison with seasonality view (months × years)
+Next.js 15 (App Router) application. Four tabs built with Recharts, shadcn/ui, Tailwind CSS v4, TanStack Query v5, and Zustand v5:
+
+- **Overview** — KPI tiles, news panel, mortgage rate table, natural language search bar (Haiku), HITL research panel
+- **Trends** — Recharts line chart: all ~30 MSAs as grey mass, National and selected market highlighted; custom tooltip
+- **Rankings** — Horizontal bar chart, all markets sorted by selected metric; YoY metrics display % change, absolute metrics display raw values
+- **Yearly Comparison** — Multi-market multi-year seasonal overlay; raw absolute values, one color per market fading by year
+
+All backend calls are proxied through Next.js route handlers (`/app/api/*`) to avoid browser CORS issues on the internal Docker network.
 
 ### postgres (port 5432)
 
@@ -136,6 +139,8 @@ MarketHistorySnapshot
   new_listings        Integer
 ```
 
+YoY fields (`yoy_active_listings`, `yoy_median_sale_price`, `yoy_sales_volume`, `yoy_new_listings`) are computed at query time by the API — not stored in the table.
+
 ---
 
 ## Agent Pipeline
@@ -161,7 +166,6 @@ Edges:
   evaluator → END                  (if report passes)
 
 Checkpointer: MemorySaver (in-memory, dev-grade)
-Interrupt: none explicit — two-pass design handles HITL
 ```
 
 ### Shared State (`ResearchState`)
@@ -282,6 +286,21 @@ Final synthesis (max_tokens=300)
 
 ---
 
+## Dashboard — Next.js Proxy Layer
+
+The Next.js dashboard cannot call `mcp-server:8001` or `agent-runner:8000` directly from the browser (internal Docker hostnames are not reachable from the user's machine). All API calls go through Next.js route handlers at `/app/api/*` which proxy to the internal services using server-side `fetch`.
+
+```
+Browser → GET /api/dashboard?market=Austin
+        → Next.js route handler (/app/api/dashboard/route.ts)
+        → fetch("http://mcp-server:8001/dashboard?market=Austin")
+        → JSON response forwarded to browser
+```
+
+Route handlers: `dashboard`, `history/[market]`, `msa/rankings`, `query`, `research`, `research/[runId]/status`, `research/[runId]/approve`, `health`.
+
+---
+
 ## Observability
 
 **Logging:** `structlog` JSON output in production, colored console in dev (`LOG_FORMAT=console`). Key event names: `mcp_server.starting`, `mcp_server.ready`, `feed.news.complete`, `feed.rates.updated`, `research.started`, `research.complete`.
@@ -314,7 +333,7 @@ Endpoint: `GET /api/metrics`
 | `POST /query` | 10/min | 3/min |
 | `POST /research` | 5/min | — |
 
-**CORS:** `ALLOWED_ORIGINS` env var; defaults to `http://localhost:8501,http://localhost:3000`.
+**CORS:** `ALLOWED_ORIGINS` env var; defaults to `http://localhost:3000`.
 
 ---
 

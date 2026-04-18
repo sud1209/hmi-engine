@@ -1,6 +1,6 @@
 # HMI Engine — Housing Market Intelligence Platform
 
-A production-grade multi-agent AI system for US housing market research. Combines an MCP data server, a LangGraph multi-agent pipeline with human-in-the-loop approval, live data feeds, and an interactive Streamlit dashboard with visualization tabs.
+A production-grade multi-agent AI system for US housing market research. Combines an MCP data server, a LangGraph multi-agent pipeline with human-in-the-loop approval, live data feeds, and a Next.js interactive dashboard with visualization tabs.
 
 ---
 
@@ -8,7 +8,7 @@ A production-grade multi-agent AI system for US housing market research. Combine
 
 | Capability | Implementation |
 |---|---|
-| MCP protocol | FastAPI MCP server with housing tools over HTTP transport |
+| MCP protocol | FastAPI MCP server with housing tools over SSE transport |
 | Agent tool use | `mcp_client.py` via official `mcp` Python SDK |
 | Computer use | Playwright headless Chromium — Zillow, Redfin, Realtor.com |
 | Multi-agent orchestration | LangGraph `StateGraph`: supervisor → researcher_analyst → writer → evaluator |
@@ -16,7 +16,7 @@ A production-grade multi-agent AI system for US housing market research. Combine
 | Sandboxed code execution | Subprocess Python executor for ROI/quant math |
 | HITL breakpoints | `MemorySaver` checkpointer; plan approval before pipeline runs |
 | Episodic memory | ChromaDB persistent vector store; prior research injected into prompts |
-| Self-correction | Evaluator node: structural + regex report validation, no LLM tokens |
+| Self-correction | Evaluator node: structural + regex report validation, zero LLM tokens |
 | Dual output streams | `state["report"]` (Markdown) + `state["dashboard"]` (KPI JSON) |
 | Natural language query | `POST /api/query` — Haiku tool-use loop, max 3 rounds, 15s timeout |
 
@@ -42,13 +42,13 @@ cp .env.example .env
 docker-compose up --build
 ```
 
-Six services start in dependency order: `postgres` → `mcp-server` → `agent-runner` → `dashboard` → `caddy`.
+Five services start in dependency order: `postgres` → `mcp-server` → `agent-runner` → `dashboard` → `caddy`.
 
 ### 3. Access
 
 | URL | Service |
 |---|---|
-| `http://localhost` | Streamlit dashboard |
+| `http://localhost` | Next.js dashboard |
 | `http://localhost/api/health` | MCP server health |
 | `http://localhost/agent/health` | Agent runner health |
 | `http://localhost/api/docs` | MCP server Swagger |
@@ -64,7 +64,8 @@ curl -X POST http://localhost/agent/research \
 
 # Approve the plan
 curl -X POST http://localhost/agent/research/{run_id}/approve \
-  -d '{"approved": true}' -H "Content-Type: application/json"
+  -H "Content-Type: application/json" \
+  -d '{"approved": true}'
 
 # Poll for result
 curl http://localhost/agent/research/{run_id}/status
@@ -87,7 +88,7 @@ uv run python agents/eval/eval_harness.py --smoke
         │
         ├── /api/*      → mcp-server:8001   (prefix stripped)
         ├── /agent/*    → agent-runner:8000  (prefix stripped)
-        └── /*          → dashboard:8501
+        └── /*          → dashboard:3000
 
 [PostgreSQL 16]   ← mcp-server (asyncpg, Alembic migrations)
 [ChromaDB vol]    ← agent-runner (episodic memory, persisted)
@@ -150,7 +151,13 @@ hmi-engine/
 │   │   └── utils/sentiment.py
 │   └── eval/eval_harness.py
 └── dashboard/
-    └── dashboard.py           # 4 tabs: Overview, Trends, Rankings, Historical
+    ├── src/
+    │   ├── app/               # Next.js App Router pages and API route handlers
+    │   ├── components/        # UI components (charts, tabs, layout, overview)
+    │   ├── hooks/             # TanStack Query data hooks
+    │   └── lib/               # types, api client, Zustand store, utils
+    ├── Dockerfile
+    └── package.json
 ```
 
 ---
@@ -160,13 +167,13 @@ hmi-engine/
 | Variable | Required | Default | Description |
 |---|---|---|---|
 | `ANTHROPIC_API_KEY` | Yes | — | Claude Haiku for all LLM calls |
-| `NEWS_API_KEY` | No | — | NewsAPI.org; absent = RSS-only |
+| `NEWS_API_KEY` | No | — | NewsAPI.org; absent = RSS-only (NAR, Redfin, HUD) |
 | `DATABASE_URL` | Auto | postgres://hmi:hmi@postgres/hmi | Set by docker-compose |
 | `CHROMA_PATH` | Auto | /app/data/chroma | Set by docker-compose |
 | `DOMAIN` | No | localhost | Caddy domain; set for real TLS |
 | `SECRET_KEY` | Prod | dev-secret | JWT signing key |
-| `API_KEY_HASH` | Prod | — | Pipeline ingest API key hash |
-| `ALLOWED_ORIGINS` | No | localhost ports | CORS allowlist |
+| `API_KEY_HASH` | Prod | — | Pipeline ingest API key (SHA-256 hex) |
+| `ALLOWED_ORIGINS` | No | http://localhost:3000 | CORS allowlist |
 | `SENTRY_DSN` | No | — | Error tracking DSN |
 | `LOG_FORMAT` | No | json | `json` or `console` |
 
@@ -176,8 +183,6 @@ hmi-engine/
 
 | Document | Contents |
 |---|---|
-| [PLAN.md](PLAN.md) | Full 11-phase production hardening plan |
-| [docs/ENGINEERING_LOG.md](docs/ENGINEERING_LOG.md) | Build history, decisions, bugs found and fixed |
 | [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) | System design, data flow, agent state, DB schema |
 | [docs/API.md](docs/API.md) | All endpoints with request/response schemas |
 

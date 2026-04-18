@@ -37,7 +37,7 @@ export interface HistorySnapshot {
   sales_volume: number
   new_listings: number
   yoy_active_listings: number | null
-  yoy_sale_price: number | null
+  yoy_median_sale_price: number | null
   yoy_sales_volume: number | null
   yoy_new_listings: number | null
 }
@@ -45,7 +45,9 @@ export interface HistorySnapshot {
 export interface RankingRow {
   market: string
   value: number
+  yoy_change: number | null
   rank: number
+  month: string
 }
 
 export type ResearchStatus =

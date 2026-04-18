@@ -18,7 +18,23 @@ export function formatMetricValue(metric: string, value: number | null | undefin
     return `${sign}${value.toFixed(1)}%`
   }
 
+  return formatAbsoluteValue(metric, value)
+}
+
+// Format a metric as its raw absolute value — used where YoY % is not appropriate
+// (e.g. Yearly Comparison chart which plots actual values, not year-over-year change)
+export function formatAbsoluteValue(metric: string, value: number | null | undefined): string {
+  if (value === null || value === undefined) return '—'
+
   switch (metric) {
+    case 'median_sale_price':
+      return `$${(value / 1000).toFixed(0)}K`
+    case 'active_listings':
+    case 'sales_volume':
+    case 'new_listings':
+      if (value >= 1_000_000) return `${(value / 1_000_000).toFixed(1)}M`
+      if (value >= 1_000) return `${(value / 1_000).toFixed(0)}K`
+      return String(Math.round(value))
     case 'median_dom':
       return `${Math.round(value)} days`
     case 'months_supply':

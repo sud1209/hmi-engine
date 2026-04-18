@@ -47,8 +47,17 @@ Thumbs.db
 *.log
 logs/
 
-# Internal process records (root-level only; docs/ version is tracked)
+# Internal process records
 /ENGINEERING_LOG.md
+docs/ENGINEERING_LOG.md
+docs/superpowers/
+
+# Claude Code / Superpowers internal state
+.claude/
+.superpowers/
 
 # Demo output
 demo/output/
+
+# Eval benchmark output
+benchmark_results.json
