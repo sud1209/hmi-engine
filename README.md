@@ -33,7 +33,8 @@ A production-grade multi-agent AI system for US housing market research. Combine
 
 ```bash
 cp .env.example .env
-# Set ANTHROPIC_API_KEY at minimum
+# Set ANTHROPIC_API_KEY at minimum.
+# Set DOMAIN to your public hostname for automatic HTTPS via Caddy.
 ```
 
 ### 2. Start
@@ -44,47 +45,14 @@ docker-compose up --build
 
 Five services start in dependency order: `postgres` → `mcp-server` → `agent-runner` → `dashboard` → `caddy`.
 
-### 3. Access
-
-| URL | Service |
-|---|---|
-| `http://localhost` | Next.js dashboard |
-| `http://localhost/api/health` | MCP server health |
-| `http://localhost/agent/health` | Agent runner health |
-| `http://localhost/api/docs` | MCP server Swagger |
-| `http://localhost/api/metrics` | Prometheus metrics |
-
-### 4. Run a research query
-
-```bash
-# Start research (returns plan for approval)
-curl -X POST http://localhost/agent/research \
-  -H "Content-Type: application/json" \
-  -d '{"query": "housing market in Austin Texas"}'
-
-# Approve the plan
-curl -X POST http://localhost/agent/research/{run_id}/approve \
-  -H "Content-Type: application/json" \
-  -d '{"approved": true}'
-
-# Poll for result
-curl http://localhost/agent/research/{run_id}/status
-```
-
-### 5. Run tests
-
-```bash
-uv run pytest mcp-server/tests/
-uv run pytest agents/tests/
-cd agents && uv run python -m agents.eval.eval_harness --smoke
-```
+Once running, the dashboard is available at your configured domain (or `http://localhost` for local dev). The MCP server API is at `/api`, the agent runner at `/agent`.
 
 ---
 
 ## Architecture
 
 ```
-[Caddy — http://localhost]
+[Caddy — HTTPS termination]
         │
         ├── /api/*      → mcp-server:8001   (prefix stripped)
         ├── /agent/*    → agent-runner:8000  (prefix stripped)
