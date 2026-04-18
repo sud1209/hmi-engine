@@ -253,7 +253,7 @@ Playwright async Chromium session. Per-node lifecycle (created at start, closed 
 
 ### SandboxRunner (`tools/sandbox.py`)
 
-Subprocess-based Python executor. Code + input data serialised to JSON, passed via stdin, output read from stdout. Allowed imports: `pandas`, `numpy`, `statistics`, `json`, `datetime`, `collections`. Blocked: `os`, `subprocess`, `sys`, `socket`, `requests`. 30-second timeout.
+Subprocess-based Python executor. Wraps user code in a generated script passed to `python -c`; output captured from stdout. Pre-execution AST scan blocks dangerous imports before any subprocess is spawned. Allowed imports: `pandas`, `numpy`, `statistics`, `json`, `datetime`, `collections`. Blocked: `os`, `subprocess`, `sys`, `socket`, `requests`, and others. 30-second timeout (configurable via `SANDBOX_TIMEOUT_SECONDS`).
 
 ### EpisodicMemory (`tools/memory.py`)
 

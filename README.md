@@ -76,7 +76,7 @@ curl http://localhost/agent/research/{run_id}/status
 ```bash
 uv run pytest mcp-server/tests/
 uv run pytest agents/tests/
-uv run python agents/eval/eval_harness.py --smoke
+cd agents && uv run python -m agents.eval.eval_harness --smoke
 ```
 
 ---
@@ -148,8 +148,8 @@ hmi-engine/
 │   │   │   └── nodes/         # supervisor, researcher_analyst, news_analyst, writer, evaluator
 │   │   ├── a2a/               # protocol.py, router.py, agent_cards.py
 │   │   ├── tools/             # mcp_client, computer_use, sandbox, memory
-│   │   └── utils/sentiment.py
-│   └── eval/eval_harness.py
+│   │   ├── utils/sentiment.py
+│   │   └── eval/eval_harness.py
 └── dashboard/
     ├── src/
     │   ├── app/               # Next.js App Router pages and API route handlers
