@@ -132,18 +132,17 @@ hmi-engine/
 
 ## Environment Variables
 
-| Variable | Required | Default | Description |
-|---|---|---|---|
-| `ANTHROPIC_API_KEY` | Yes | — | Claude Haiku for all LLM calls |
-| `NEWS_API_KEY` | No | — | NewsAPI.org; absent = RSS-only (NAR, Redfin, HUD) |
-| `DATABASE_URL` | Auto | postgres://hmi:hmi@postgres/hmi | Set by docker-compose |
-| `CHROMA_PATH` | Auto | /app/data/chroma | Set by docker-compose |
-| `DOMAIN` | No | localhost | Caddy domain; set for real TLS |
-| `SECRET_KEY` | Prod | dev-secret | JWT signing key |
-| `API_KEY_HASH` | Prod | — | Pipeline ingest API key (SHA-256 hex) |
-| `ALLOWED_ORIGINS` | No | http://localhost:3000 | CORS allowlist |
-| `SENTRY_DSN` | No | — | Error tracking DSN |
-| `LOG_FORMAT` | No | json | `json` or `console` |
+All variables are documented in `.env.example`. Key ones:
+
+| Variable | Required | Description |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | Yes | Claude Haiku for all LLM calls |
+| `NEWS_API_KEY` | No | NewsAPI.org key; absent = RSS-only fallback (NAR, Redfin, HUD) |
+| `DOMAIN` | Prod | Public hostname — Caddy handles TLS automatically |
+| `SECRET_KEY` | Prod | JWT signing secret — generate a random 32-char string |
+| `API_KEY_HASH` | Prod | SHA-256 hex of the pipeline ingest API key |
+| `ALLOWED_ORIGINS` | Prod | Comma-separated CORS allowlist for your domain |
+| `SENTRY_DSN` | No | Sentry project DSN — error tracking disabled if absent |
 
 ---
 
