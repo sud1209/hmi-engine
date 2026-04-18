@@ -6,6 +6,7 @@ import mcp_server.db.session as session_module
 import mcp_server.tools.search_houses as search_houses_module
 import mcp_server.tools.valuation_data as valuation_data_module
 import mcp_server.tools.housing_market as housing_market_module
+import mcp_server.feeds.news_fetcher as news_fetcher_module
 
 
 @pytest_asyncio.fixture(autouse=True)
@@ -24,6 +25,7 @@ async def override_db_session(monkeypatch):
     monkeypatch.setattr(search_houses_module, "AsyncSessionLocal", TestSession)
     monkeypatch.setattr(valuation_data_module, "AsyncSessionLocal", TestSession)
     monkeypatch.setattr(housing_market_module, "AsyncSessionLocal", TestSession)
+    monkeypatch.setattr(news_fetcher_module, "AsyncSessionLocal", TestSession)
 
     # Seed minimal data so tool functions return non-empty results
     async with TestSession() as session:
